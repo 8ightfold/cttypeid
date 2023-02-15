@@ -2,12 +2,18 @@
 #define CTTYPEID_HPP_
 
 #if defined(__clang__)
+#  if defined(__ELLCC__)
+#    define COMPILER_ELLCC "ellcc"
+#  elif defined(__INTEL_LLVM_COMPILER)
+#    define COMPILER_ICX "icx"
+#  endif
 #  define COMPILER_CLANG "clang"
 #elif defined(__INTEL_COMPILER)
 #  define COMPILER_ICC "icc"
 #elif defined(__GNUC__)
 #  if defined(__MINGW32__)
 #    define COMPILER_MINGW "mingw"
+#    define COMPILER_GCC "gcc"
 #  elif defined(__NVCOMPILER)
 #    define COMPILER_NVCPP "nvc++"
 #  else
@@ -17,6 +23,7 @@
 #  define COMPILER_MSVC "msvc"
 #else
 #  define COMPILER_UNKNOWN "unknown"
+#  error Your compiler is currently unsupported!
 #endif
 
 #if defined(COMPILER_MSVC)
@@ -39,13 +46,6 @@
 #include <string_view>
 #include <type_traits>
 
-template <std::size_t...NN>
-constexpr auto substr_to_array(std::string_view str, std::index_sequence<NN...>) noexcept
-{
-    constexpr std::size_t count = sizeof...(NN) + 1;
-    return std::array<char, count> { str[NN]..., '\0' };
-};
-
 #if defined(COMPILER_CLANG)
 #  define INTROSPECT_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #  define INTROSPECT_PRETTY_FUNCTION_START "[T = "
@@ -63,6 +63,13 @@ constexpr auto substr_to_array(std::string_view str, std::index_sequence<NN...>)
 #  define INTROSPECT_PRETTY_FUNCTION_START " "
 #  define INTROSPECT_PRETTY_FUNCTION_END " \0"
 #endif
+
+template <std::size_t...NN>
+constexpr auto substr_to_array(std::string_view str, std::index_sequence<NN...>) noexcept
+{
+    constexpr std::size_t count = sizeof...(NN) + 1;
+    return std::array<char, count> { str[NN]..., '\0' };
+};
 
 template <typename T>
 constexpr auto pretty_function_array() noexcept
